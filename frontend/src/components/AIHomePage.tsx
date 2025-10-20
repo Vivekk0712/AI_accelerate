@@ -179,32 +179,89 @@ export function AIHomePage() {
               Combining the best tools for AI, search, and data management
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { icon: Brain, name: "Gemini 2.5 Pro", desc: "AI Generation", color: "from-blue-500 to-cyan-500" },
-                { icon: Zap, name: "Elasticsearch", desc: "Vector Search", color: "from-yellow-500 to-orange-500" },
-                { icon: Database, name: "Supabase", desc: "Data Storage", color: "from-green-500 to-emerald-500" },
-                { icon: Shield, name: "Firebase", desc: "Authentication", color: "from-purple-500 to-pink-500" }
-              ].map((tech, index) => (
-                <motion.div
-                  key={index}
-                  className="flex flex-col items-center group"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
+              {/* Gemini */}
+              <motion.div
+                className="flex flex-col items-center group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0 }}
+                whileHover={{ y: -10 }}
+              >
+                <motion.div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl transition-shadow"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)' }}
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <motion.div 
-                    className={`h-16 w-16 bg-gradient-to-br ${tech.color} rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl transition-shadow`}
-                    whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <tech.icon className="h-8 w-8 text-white" />
-                  </motion.div>
-                  <h3 className="font-semibold text-sm md:text-base">{tech.name}</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">{tech.desc}</p>
+                  <Brain className="h-8 w-8 text-white" />
                 </motion.div>
-              ))}
+                <h3 className="font-semibold text-sm md:text-base">Gemini 2.5 Pro</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">AI Generation</p>
+              </motion.div>
+
+              {/* Elasticsearch */}
+              <motion.div
+                className="flex flex-col items-center group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                whileHover={{ y: -10 }}
+              >
+                <motion.div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl transition-shadow"
+                  style={{ background: 'linear-gradient(135deg, #eab308 0%, #f97316 100%)' }}
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Zap className="h-8 w-8 text-white" />
+                </motion.div>
+                <h3 className="font-semibold text-sm md:text-base">Elasticsearch</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Vector Search</p>
+              </motion.div>
+
+              {/* Supabase */}
+              <motion.div
+                className="flex flex-col items-center group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                whileHover={{ y: -10 }}
+              >
+                <motion.div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl transition-shadow"
+                  style={{ background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)' }}
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Database className="h-8 w-8 text-white" />
+                </motion.div>
+                <h3 className="font-semibold text-sm md:text-base">Supabase</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Data Storage</p>
+              </motion.div>
+
+              {/* Firebase */}
+              <motion.div
+                className="flex flex-col items-center group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                whileHover={{ y: -10 }}
+              >
+                <motion.div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-2xl transition-shadow"
+                  style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
+                  whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Shield className="h-8 w-8 text-white" />
+                </motion.div>
+                <h3 className="font-semibold text-sm md:text-base">Firebase</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">Authentication</p>
+              </motion.div>
             </div>
           </motion.div>
         </div>
