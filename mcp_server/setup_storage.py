@@ -60,13 +60,20 @@ def create_storage_bucket(supabase: Client, bucket_name: str = 'files'):
             'text/xml'
         ]
         
-        # Create bucket
-        response = supabase.storage.create_bucket(
-            bucket_name, 
-            public=False,  # Private by default
-            file_size_limit=50 * 1024 * 1024,  # 50MB limit
-            allowed_mime_types=allowed_mime_types
-        )
+        # Create bucket with updated API
+        # Note: Newer Supabase library uses different parameters
+        try:
+            response = supabase.storage.create_bucket(
+                bucket_name,
+                options={
+                    "public": False,  # Private by default
+                    "file_size_limit": 50 * 1024 * 1024,  # 50MB limit
+                    "allowed_mime_types": allowed_mime_types
+                }
+            )
+        except TypeError:
+            # Fallback for older API or simpler creation
+            response = supabase.storage.create_bucket(bucket_name)
         
         print(f"Successfully created bucket: {bucket_name}")
         print("Supported file types:")

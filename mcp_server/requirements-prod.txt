@@ -20,6 +20,9 @@ pydantic-settings==2.0.3
 supabase==2.4.4
 postgrest==0.16.8
 
+# Elasticsearch for Vector Search
+elasticsearch==8.12.0
+
 # AI & Embeddings
 google-generativeai==0.5.4
 

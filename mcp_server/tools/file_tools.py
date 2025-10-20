@@ -6,6 +6,9 @@ from datetime import datetime
 import PyPDF2
 import io
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import enhanced embedding functions
 try:
@@ -211,13 +214,17 @@ def create_file_record(user_id: str, filename: str, file_size: int, file_path: s
     except Exception as e:
         raise Exception(f"Failed to create file record: {str(e)}")
 
-def process_file_chunks(file_id: str, chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Process and store file chunks with embeddings"""
+def process_file_chunks(file_id: str, chunks: List[Dict[str, Any]], user_id: str, filename: str = None) -> List[Dict[str, Any]]:
+    """Process and store file chunks with embeddings in Elasticsearch"""
     try:
         from supabase_client import supabase
+        from elasticsearch_client import index_document_chunk
+        
         if supabase is None:
             raise Exception("Supabase client not initialized")
+        
         chunk_records: List[Dict[str, Any]] = []
+        
         for chunk in chunks:
             # Ensure chunk is a dict
             if isinstance(chunk, str):
@@ -226,6 +233,8 @@ def process_file_chunks(file_id: str, chunks: List[Dict[str, Any]]) -> List[Dict
                     'content': chunk,
                     'page_number': None
                 }
+            
+            # Store chunk metadata in Supabase
             chunk_data = {
                 'file_id': file_id,
                 'chunk_index': chunk.get('chunk_index', len(chunk_records)),
@@ -233,42 +242,73 @@ def process_file_chunks(file_id: str, chunks: List[Dict[str, Any]]) -> List[Dict
                 'page_number': chunk.get('page_number')
             }
             chunk_response = supabase.table('file_chunks').insert(chunk_data).execute()
+            
             if not chunk_response.data:
                 continue
+            
             chunk_record = chunk_response.data[0]
             chunk_records.append(chunk_record)
+            
+            # Generate embedding
             embedding = generate_embedding(chunk_data['content'])
-            embedding_data = {
-                'file_chunk_id': chunk_record['id'],
-                'vector': embedding,
-                'content_type': 'file_chunk'
-            }
-            supabase.table('embeddings').insert(embedding_data).execute()
+            
+            # Store embedding in Elasticsearch instead of Supabase
+            try:
+                index_document_chunk(
+                    chunk_id=chunk_record['id'],
+                    file_id=file_id,
+                    user_id=user_id,
+                    content=chunk_data['content'],
+                    embedding=embedding,
+                    chunk_index=chunk_data['chunk_index'],
+                    page_number=chunk_data.get('page_number'),
+                    filename=filename
+                )
+                logger.info(f"✅ Indexed chunk {chunk_record['id']} in Elasticsearch")
+            except Exception as es_error:
+                logger.error(f"Failed to index chunk in Elasticsearch: {es_error}")
+                # Continue processing other chunks even if one fails
+        
         return chunk_records
     except Exception as e:
         raise Exception(f"Failed to process file chunks: {str(e)}")
 
 def upload_pdf_file(user_id: str, filename: str, file_content: bytes) -> Dict[str, Any]:
-    """Complete file upload process (supports multiple types)"""
+    """Complete file upload process (supports multiple types) with Elasticsearch"""
     try:
         from supabase_client import supabase, get_or_create_user
         if supabase is None:
             raise Exception("Supabase client not initialized")
+        
         user_record = get_or_create_user(user_id)
         user_uuid = user_record['id']
+        
         extracted_data = extract_text_from_file(file_content, filename)
         content_type = extracted_data.get('mime_type', 'application/octet-stream')
+        
         file_path = upload_file_to_storage(file_content, filename, user_uuid)
         file_record = create_file_record(user_uuid, filename, len(file_content), file_path, content_type)
+        
         supabase.table('files').update({
             'upload_status': 'processing'
         }).eq('id', file_record['id']).execute()
+        
         try:
-            chunk_records = process_file_chunks(file_record['id'], extracted_data['chunks'])
+            # Process chunks with Elasticsearch indexing
+            chunk_records = process_file_chunks(
+                file_record['id'], 
+                extracted_data['chunks'],
+                user_uuid,
+                filename
+            )
+            
             supabase.table('files').update({
                 'upload_status': 'processed',
                 'updated_at': datetime.now().isoformat()
             }).eq('id', file_record['id']).execute()
+            
+            logger.info(f"✅ File processed: {len(chunk_records)} chunks indexed in Elasticsearch")
+            
             return {
                 'success': True,
                 'file_id': file_record['id'],
@@ -285,6 +325,7 @@ def upload_pdf_file(user_id: str, filename: str, file_content: bytes) -> Dict[st
             }).eq('id', file_record['id']).execute()
             raise processing_error
     except Exception as e:
+        logger.error(f"Error uploading file: {e}")
         return {
             'success': False,
             'error': str(e)
@@ -326,7 +367,7 @@ def get_file_by_id(file_id: str) -> Optional[Dict[str, Any]]:
 
 def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_reranking: bool = True) -> List[Dict[str, Any]]:
     """
-    Search for similar file chunks using semantic vector similarity with optional re-ranking
+    Search for similar file chunks using Elasticsearch vector similarity with optional re-ranking
     
     Args:
         query: Search query
@@ -338,10 +379,8 @@ def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_rerankin
         List of matching chunks with similarity scores
     """
     try:
-        from supabase_client import supabase, get_or_create_user
-        if supabase is None:
-            print("Supabase client not initialized")
-            return []
+        from supabase_client import get_or_create_user
+        from elasticsearch_client import search_similar_chunks as es_search
         
         # Map Firebase UID to UUID
         user_record = get_or_create_user(user_id)
@@ -353,25 +392,19 @@ def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_rerankin
         # Retrieve more candidates for re-ranking (if enabled)
         initial_limit = limit * 3 if use_reranking and SEMANTIC_EMBEDDINGS_AVAILABLE else limit
         
-        # Call RPC for vector similarity
+        # Search using Elasticsearch with hybrid search (vector + keyword)
         try:
-            rpc_resp = supabase.rpc('match_file_chunks', {
-                'query_embedding': query_vector,
-                'match_count': initial_limit,
-                'user_uuid': user_uuid
-            }).execute()
+            results = es_search(
+                query_embedding=query_vector,
+                user_id=user_uuid,
+                k=initial_limit,
+                num_candidates=initial_limit * 2,
+                use_hybrid=True,
+                query_text=query
+            )
             
-            if rpc_resp.data:
-                results = [
-                    {
-                        'id': row['id'],
-                        'content': row['content'],
-                        'page_number': row.get('page_number'),
-                        'file_id': row['file_id'],
-                        'similarity_score': row.get('similarity', 0)
-                    }
-                    for row in rpc_resp.data
-                ]
+            if results:
+                logger.info(f"✅ Elasticsearch returned {len(results)} results")
                 
                 # Apply re-ranking if enabled and available
                 if use_reranking and SEMANTIC_EMBEDDINGS_AVAILABLE and len(results) > 1:
@@ -391,57 +424,34 @@ def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_rerankin
                             result['similarity_score'] = rerank_score  # Use rerank score as primary
                             reranked_results.append(result)
                         
-                        print(f"✅ Re-ranked {len(results)} results to top {len(reranked_results)}")
+                        logger.info(f"✅ Re-ranked {len(results)} results to top {len(reranked_results)}")
                         return reranked_results
                         
                     except Exception as rerank_error:
-                        print(f"⚠️  Re-ranking failed, using vector similarity: {rerank_error}")
+                        logger.warning(f"⚠️  Re-ranking failed, using Elasticsearch scores: {rerank_error}")
                         return results[:limit]
                 
                 return results[:limit]
+            else:
+                logger.warning("No results from Elasticsearch")
+                return []
                 
         except Exception as e:
-            print(f"Vector RPC failed, falling back to text overlap: {e}")
-        
-        # Fallback: simple text overlap across user's files
-        user_files = get_user_files(user_id)
-        if not user_files:
+            logger.error(f"Elasticsearch search failed: {e}")
             return []
-        
-        file_ids = [f['id'] for f in user_files]
-        response = supabase.table('file_chunks').select(
-            'id, content, page_number, file_id, files!inner(filename, original_filename)'
-        ).in_('file_id', file_ids).execute()
-        
-        if not response.data:
-            return []
-        
-        chunks_with_scores = []
-        query_lower = query.lower()
-        query_words = set(query_lower.split())
-        
-        for chunk in response.data:
-            content_lower = (chunk['content'] or '').lower()
-            content_words = set(content_lower.split())
-            overlap = len(query_words.intersection(content_words))
-            score = overlap / len(query_words) if query_words else 0
-            if score > 0:
-                chunks_with_scores.append({ **chunk, 'similarity_score': score })
-        
-        chunks_with_scores.sort(key=lambda x: x['similarity_score'], reverse=True)
-        return chunks_with_scores[:limit]
         
     except Exception as e:
-        print(f"Error searching similar chunks: {e}")
+        logger.error(f"Error searching similar chunks: {e}")
         return []
 
 def delete_file(file_id: str, user_id: str) -> bool:
-    """Delete file and all related data"""
+    """Delete file and all related data from Supabase and Elasticsearch"""
     try:
         from supabase_client import supabase, get_or_create_user
+        from elasticsearch_client import delete_file_chunks
         
         if supabase is None:
-            print("Supabase client not initialized")
+            logger.error("Supabase client not initialized")
             return False
         
         # Get or create user and get their UUID
@@ -453,17 +463,25 @@ def delete_file(file_id: str, user_id: str) -> bool:
         if not file_record or file_record['user_id'] != user_uuid:
             return False
         
+        # Delete from Elasticsearch first
+        try:
+            delete_file_chunks(file_id)
+            logger.info(f"✅ Deleted chunks from Elasticsearch for file {file_id}")
+        except Exception as e:
+            logger.warning(f"Could not delete chunks from Elasticsearch: {e}")
+        
         # Delete from storage
         try:
             supabase.storage.from_("files").remove([file_record['file_path']])
         except Exception as e:
-            print(f"Warning: Could not delete file from storage: {e}")
+            logger.warning(f"Could not delete file from storage: {e}")
         
-        # Delete file record (cascade will handle chunks and embeddings)
+        # Delete file record (cascade will handle chunks in Supabase)
         supabase.table('files').delete().eq('id', file_id).execute()
         
+        logger.info(f"✅ Deleted file {file_id} completely")
         return True
         
     except Exception as e:
-        print(f"Error deleting file: {e}")
+        logger.error(f"Error deleting file: {e}")
         return False

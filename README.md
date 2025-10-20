@@ -25,8 +25,11 @@ A comprehensive full-stack application with authentication, payments, AI chat, a
 - ChatGPT-style conversation management
 - Context isolation per conversation
 - User-aware AI responses
-- File upload and processing
-- Vector search capabilities
+- File upload and processing (PDF, DOCX, XLSX, TXT, HTML, JSON, CSV, XML)
+- **🆕 Elasticsearch vector search** for semantic similarity
+- Hybrid search (vector + keyword matching)
+- Cross-encoder re-ranking for better relevance
+- 384-dimensional embeddings (Sentence Transformers)
 
 ### 👨‍💼 **Admin Management**
 - Admin authentication system
@@ -46,7 +49,8 @@ A comprehensive full-stack application with authentication, payments, AI chat, a
 - **Node.js** >= 18
 - **Python** 3.10+ and pip
 - **Firebase project** (free tier sufficient)
-- **Supabase account** (for database)
+- **Supabase account** (for database and file storage)
+- **Elasticsearch** (Cloud or self-hosted) - **NEW!** 🎉
 - **Razorpay account** (for payments)
 - **Gmail account** (for email notifications)
 - **Gemini API key** (for AI functionality)
@@ -68,7 +72,7 @@ cd novafuze-tech
 cd backend && npm install
 
 # Frontend
-cd ../NovaFuze_web && npm install
+cd ../frontend && npm install
 
 # MCP Server (Python)
 cd ../mcp_server
@@ -142,7 +146,59 @@ Supported file types:
 - [... other supported types]
 ```
 
-### 5. **Razorpay Payment Setup**
+### 5. **Elasticsearch Setup** 🆕
+
+#### a. Create Elasticsearch Serverless (Recommended for Hackathon)
+1. Go to [Elastic Cloud](https://cloud.elastic.co)
+2. Sign up for free trial
+3. Click "Create project" → Select **"Serverless"**
+4. Choose "Elasticsearch" project type
+5. Select region and create
+6. **Save your credentials:**
+   - Endpoint URL (e.g., `https://your-project.es.region.gcp.elastic-cloud.com`)
+   - API Key
+
+#### b. Alternative: Hosted Cloud
+1. Create deployment (not serverless)
+2. Save Cloud ID and API Key
+
+#### c. Alternative: Self-Hosted (Docker)
+```bash
+docker run -d \
+  --name elasticsearch \
+  -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+```
+
+#### d. Configure Elasticsearch
+Add to `mcp_server/.env`:
+```env
+# Serverless (recommended for hackathon)
+ELASTICSEARCH_ENDPOINT=https://your-project.es.region.gcp.elastic-cloud.com
+ELASTICSEARCH_API_KEY=your_api_key_here
+
+# OR Hosted Cloud
+# ELASTICSEARCH_CLOUD_ID=your_cloud_id_here
+# ELASTICSEARCH_API_KEY=your_api_key_here
+
+# OR Self-hosted
+# ELASTICSEARCH_HOSTS=http://localhost:9200
+```
+
+#### d. Test Connection
+```bash
+cd mcp_server
+python test_elasticsearch_integration.py
+```
+
+**Expected:** All 7 tests pass ✅
+
+**For detailed setup:** See `mcp_server/ELASTICSEARCH_SETUP.md`  
+**For hackathon quick start:** See `mcp_server/HACKATHON_QUICK_START.md`
+
+### 6. **Razorpay Payment Setup**
 
 #### a. Create Razorpay Account
 1. Go to [Razorpay Dashboard](https://dashboard.razorpay.com)
@@ -167,7 +223,7 @@ Supported file types:
 
 Create `.env` files in each directory:
 
-### **`NovaFuze_web/.env`**
+### **`frontend/.env`**
 ```env
 VITE_API_BASE_URL=http://localhost:4000
 VITE_FIREBASE_API_KEY=your_firebase_api_key
@@ -215,8 +271,21 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # AI Configuration
 GEMINI_API_KEY=your_gemini_api_key
 
+# Elasticsearch Configuration (NEW! 🎉)
+# Option 1: Serverless (recommended for hackathon)
+ELASTICSEARCH_ENDPOINT=https://your-project.es.region.gcp.elastic-cloud.com
+ELASTICSEARCH_API_KEY=your_api_key_here
+
+# Option 2: Hosted Cloud
+# ELASTICSEARCH_CLOUD_ID=your_cloud_id_here
+# ELASTICSEARCH_API_KEY=your_api_key_here
+
+# Option 3: Self-hosted
+# ELASTICSEARCH_HOSTS=http://localhost:9200
+
 # Environment
 NODE_ENV=development
+JWT_SECRET_KEY=your_jwt_secret_key
 ```
 
 ## 🎯 Initial Setup Commands
@@ -262,7 +331,7 @@ Server starts on `http://localhost:8000`
 
 ### **Terminal 3 - Frontend**
 ```bash
-cd NovaFuze_web
+cd frontend
 npm run dev
 ```
 Server starts on `http://localhost:5173`
@@ -306,7 +375,7 @@ novafuze-tech/
 │   │   ├── services/       # Business logic
 │   │   └── middleware/     # Auth & validation
 │   └── serviceAccount.json # Firebase credentials
-├── NovaFuze_web/           # React frontend
+├── frontend/               # React frontend
 │   ├── src/
 │   │   ├── components/     # React components
 │   │   ├── pages/          # Page components

@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from typing import Optional
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -13,12 +14,20 @@ from tools import user_tools, chat_tools, file_tools, admin_tools
 from tools import site_tools
 from ai_client import generate_from_prompt
 from supabase_client import init_supabase
+from elasticsearch_client import init_elasticsearch
 
 class Settings(BaseSettings):
     GEMINI_API_KEY: str
     SUPABASE_URL: str
     SUPABASE_SERVICE_ROLE_KEY: str
     JWT_SECRET_KEY: str = "your-secret-key-change-in-production"
+    
+    # Elasticsearch configuration (supports multiple deployment types)
+    # All are optional - at least one must be provided for ES to work
+    ELASTICSEARCH_ENDPOINT: Optional[str] = None      # For serverless deployment
+    ELASTICSEARCH_CLOUD_ID: Optional[str] = None      # For hosted cloud deployment
+    ELASTICSEARCH_API_KEY: Optional[str] = None       # API key for authentication
+    ELASTICSEARCH_HOSTS: Optional[str] = None         # Comma-separated list for self-hosted
 
     class Config:
         env_file = ".env"
@@ -35,7 +44,36 @@ security = HTTPBearer()
 
 @app.on_event("startup")
 async def startup_event():
+    # Initialize Supabase
     init_supabase(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+    
+    # Initialize Elasticsearch (supports serverless, cloud, and self-hosted)
+    try:
+        if settings.ELASTICSEARCH_ENDPOINT and settings.ELASTICSEARCH_API_KEY:
+            # Serverless deployment
+            init_elasticsearch(
+                endpoint=settings.ELASTICSEARCH_ENDPOINT,
+                api_key=settings.ELASTICSEARCH_API_KEY
+            )
+            logger.info("✅ Elasticsearch initialized (Serverless)")
+        elif settings.ELASTICSEARCH_CLOUD_ID and settings.ELASTICSEARCH_API_KEY:
+            # Hosted cloud deployment
+            init_elasticsearch(
+                cloud_id=settings.ELASTICSEARCH_CLOUD_ID,
+                api_key=settings.ELASTICSEARCH_API_KEY
+            )
+            logger.info("✅ Elasticsearch initialized (Cloud)")
+        elif settings.ELASTICSEARCH_HOSTS:
+            # Self-hosted deployment
+            hosts = [h.strip() for h in settings.ELASTICSEARCH_HOSTS.split(',')]
+            init_elasticsearch(hosts=hosts)
+            logger.info(f"✅ Elasticsearch initialized (Self-hosted: {hosts})")
+        else:
+            logger.warning("⚠️  Elasticsearch not configured. Set ELASTICSEARCH_ENDPOINT + ELASTICSEARCH_API_KEY (serverless) or ELASTICSEARCH_CLOUD_ID + ELASTICSEARCH_API_KEY (cloud) or ELASTICSEARCH_HOSTS (self-hosted)")
+    except Exception as e:
+        logger.error(f"Failed to initialize Elasticsearch: {e}")
+        raise
+    
     # Load UI awareness from frontend
     try:
         site_tools.load_site_facts()
