@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 // New AI Assistant pages
 import { AIHomePage } from "./AIHomePage"
@@ -51,28 +52,114 @@ export function Router({ onRouteChange }: RouterProps) {
   }, [handleRouteChange])
 
   const renderPage = () => {
+    const pageVariants = {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -20 }
+    }
+
+    const pageTransition = {
+      type: "tween",
+      ease: "anticipate",
+      duration: 0.4
+    }
+
     switch (currentRoute) {
       case "home":
-        return <AIHomePage />
+        return (
+          <motion.div
+            key="home"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <AIHomePage />
+          </motion.div>
+        )
       
       case "how-it-works":
-        return <HowItWorksPage />
+        return (
+          <motion.div
+            key="how-it-works"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <HowItWorksPage />
+          </motion.div>
+        )
       
       case "use-cases":
-        return <UseCasesPage />
+        return (
+          <motion.div
+            key="use-cases"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <UseCasesPage />
+          </motion.div>
+        )
       
       case "chat":
-        return <ChatPage />
+        return (
+          <motion.div
+            key="chat"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <ChatPage />
+          </motion.div>
+        )
       
       case "admin":
-        return <AdminPage />
+        return (
+          <motion.div
+            key="admin"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <AdminPage />
+          </motion.div>
+        )
       
       case "profile":
-        return <ProfilePage />
+        return (
+          <motion.div
+            key="profile"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <ProfilePage />
+          </motion.div>
+        )
       
       default:
         return (
-          <div className="py-24 bg-background">
+          <motion.div
+            key="404"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={pageTransition}
+            className="py-24 bg-background"
+          >
             <div className="container mx-auto px-4 lg:px-8 text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
                 Page Not Found
@@ -87,12 +174,16 @@ export function Router({ onRouteChange }: RouterProps) {
                 Go Home
               </a>
             </div>
-          </div>
+          </motion.div>
         )
     }
   }
 
-  return renderPage()
+  return (
+    <AnimatePresence mode="wait">
+      {renderPage()}
+    </AnimatePresence>
+  )
 }
 
 // Navigation helper function

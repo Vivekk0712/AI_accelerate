@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import EmailAuth from '../components/auth/EmailAuth';
 import GoogleSignIn from '../components/auth/GoogleSignIn';
 import PhoneAuth from '../components/auth/PhoneAuth';
-import novaFuzeLogo from '../assets/ragbot_img2-Photoroom.png';
+// Logo will be replaced with an icon
+import { Bot } from 'lucide-react';
 import { auth } from '../firebaseClient';
 import { Shield, Zap, Users, Star } from 'lucide-react';
 
@@ -196,23 +197,20 @@ const LoginPage = () => {
                     delay: 0.2
                   }}
                 >
-                  <div className="relative">
-                    <img 
-                      src={novaFuzeLogo} 
-                      alt="AI Assistant Logo" 
-                      className="mx-auto mb-3" 
-                      style={{ width: 64, height: 64 }} 
-                    />
+                  <div className="relative inline-block">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full border-2 border-transparent"
+                      className="absolute inset-0 rounded-full"
                       style={{
-                        background: 'linear-gradient(45deg, #6366f1, #a855f7) border-box',
-                        WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                        WebkitMaskComposite: 'subtract'
+                        background: 'linear-gradient(45deg, #6366f1, #a855f7, #06b6d4)',
+                        filter: 'blur(8px)',
+                        opacity: 0.6
                       }}
                     />
+                    <div className="relative bg-gradient-to-br from-primary to-purple-600 rounded-2xl p-4 shadow-xl">
+                      <Bot className="h-8 w-8 text-white" />
+                    </div>
                   </div>
                 </motion.div>
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent">

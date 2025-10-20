@@ -1,17 +1,62 @@
-import { Upload, FileText, Search, MessageSquare, CheckCircle, Shield, Zap, Database } from "lucide-react"
+import { Upload, FileText, Search, MessageSquare, CheckCircle, Shield, Zap, Database, ArrowRight } from "lucide-react"
 import { Button } from "./ui/button"
+import { motion } from "framer-motion"
 
 export function HowItWorksPage() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background py-20">
-      <div className="container mx-auto px-4 lg:px-8">
+    <div className="min-h-screen bg-background py-20 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent rounded-full blur-3xl"
+        />
+      </div>
+      <div className="container mx-auto px-4 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">How It Works</h1>
+        <motion.div 
+          className="max-w-3xl mx-auto text-center mb-16"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            How It Works
+          </h1>
           <p className="text-xl text-muted-foreground">
             Understanding the technology behind your AI assistant
           </p>
-        </div>
+        </motion.div>
 
         {/* Flow Diagram */}
         <div className="max-w-4xl mx-auto mb-20">
