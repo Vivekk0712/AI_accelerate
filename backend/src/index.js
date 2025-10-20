@@ -20,7 +20,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(express.json());
+// Increase body size limit for image uploads (base64 encoded images can be large)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 app.use('/api', sessionRoutes);

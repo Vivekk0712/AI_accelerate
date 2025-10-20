@@ -1,10 +1,14 @@
 import os
 import re
+import base64
 import google.generativeai as genai
+from PIL import Image
+import io
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 model = genai.GenerativeModel('gemini-2.5-pro')
+vision_model = genai.GenerativeModel('gemini-2.0-flash-exp')  # Vision-capable model
 
 def expand_query(query: str, conversation_context: list[dict] = None) -> list[str]:
     """
@@ -126,3 +130,63 @@ Keep responses concise and natural.
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
     return text
+
+
+def generate_with_image(prompt: str, context: list[dict], user_name: str = None, image_base64: str = None, image_mime_type: str = None):
+    """
+    Generates a response from the Gemini vision model with an image.
+    
+    Args:
+        prompt: User's text question
+        context: Conversation history
+        user_name: User's name
+        image_base64: Base64 encoded image data
+        image_mime_type: MIME type of the image (e.g., "image/jpeg")
+    
+    Returns:
+        AI response based on the image and question
+    """
+    # System prompt for vision tasks
+    system_prompt = """You are a helpful AI assistant with vision capabilities. 
+Analyze the provided image carefully and answer the user's question accurately.
+Be descriptive and specific about what you see in the image.
+If you cannot determine something from the image, say so clearly.
+Keep responses natural and conversational."""
+    
+    # Build user context
+    user_context = ""
+    if user_name:
+        user_context = f"The user's name is {user_name}. "
+    
+    # Build conversation context string
+    context_str = ""
+    if context:
+        for message in context[-5:]:  # Last 5 messages for context
+            role = "Assistant" if message['role'] == 'assistant' else "User"
+            context_str += f"{role}: {message['content']}\n"
+    
+    # Combine context
+    if context_str:
+        full_prompt = f"{system_prompt}\n\n{user_context}Previous conversation:\n{context_str}\nCurrent question about the image: {prompt}"
+    else:
+        full_prompt = f"{system_prompt}\n\n{user_context}Question about the image: {prompt}"
+    
+    try:
+        # Decode base64 image
+        image_data = base64.b64decode(image_base64)
+        
+        # Create PIL Image
+        image = Image.open(io.BytesIO(image_data))
+        
+        # Generate response with image
+        response = vision_model.generate_content([full_prompt, image])
+        text = (response.text or "").strip()
+        
+        # Clean up response
+        text = re.sub(r"\n{3,}", "\n\n", text).strip()
+        
+        return text
+        
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return f"I apologize, but I encountered an error processing the image. Please try again with a different image or format. Error: {str(e)}"

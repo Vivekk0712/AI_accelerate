@@ -100,7 +100,7 @@ router.get('/me', verifySession, async (req, res) => {
 });
 
 router.post('/chat', verifySession, async (req, res) => {
-  const { message, metadata } = req.body;
+  const { message, metadata, image_base64, image_mime_type } = req.body;
   const firebaseUid = req.user.uid;
   
   // Get user information from Firebase token
@@ -126,6 +126,7 @@ router.post('/chat', verifySession, async (req, res) => {
   }
   
   console.log('Final extracted - Name:', userName, 'Email:', userEmail);
+  console.log('Has image:', !!image_base64);
 
   try {
     const mcpResponse = await axios.post(process.env.MCP_SERVER_URL + '/mcp/query', {
@@ -134,6 +135,8 @@ router.post('/chat', verifySession, async (req, res) => {
       metadata,
       user_name: userName,
       user_email: userEmail,
+      image_base64: image_base64 || null,
+      image_mime_type: image_mime_type || null,
     });
 
     res.json(mcpResponse.data);

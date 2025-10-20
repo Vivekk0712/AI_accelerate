@@ -25,6 +25,27 @@ export const sendMessage = (message: string, metadata?: Record<string, unknown>)
   return api.post('/api/chat', { message, metadata });
 };
 
+export const sendMessageWithImage = async (message: string, imageFile: File) => {
+  // Convert image to base64
+  const base64Image = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(imageFile);
+  });
+
+  return api.post('/api/chat', {
+    message,
+    image_base64: base64Image,
+    image_mime_type: imageFile.type
+  });
+};
+
 export const clearChat = () => {
   return api.delete('/api/clear-chat');
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Button, Card, Spinner, InputGroup } from 'react-bootstrap';
-import { X, Fullscreen, FullscreenExit, Trash } from 'react-bootstrap-icons';
-import { getHistory, sendMessage, clearChat } from '../services/authApi';
+import { X, Fullscreen, FullscreenExit, Trash, Image as ImageIcon, XCircle } from 'react-bootstrap-icons';
+import { getHistory, sendMessage, sendMessageWithImage, clearChat } from '../services/authApi';
 
 interface User {
   uid: string;
@@ -20,7 +20,10 @@ const ChatBot = ({ user, onToggleFullscreen, isFullscreen = false }: ChatBotProp
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load chat history from localStorage (user-specific)
   useEffect(() => {
@@ -54,21 +57,80 @@ const ChatBot = ({ user, onToggleFullscreen, isFullscreen = false }: ChatBotProp
     }
   }, [chatHistory, loading]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size must be less than 10MB');
+        return;
+      }
+      
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() && !selectedImage) return;
 
-    const userMessage = { role: 'user', content: message, timestamp: new Date().toISOString() };
+    const displayMessage = selectedImage 
+      ? `${message || 'Sent an image'} 🖼️`
+      : message;
+    
+    const userMessage = { 
+      role: 'user', 
+      content: displayMessage, 
+      timestamp: new Date().toISOString(),
+      hasImage: !!selectedImage
+    };
     const newChatHistory = [...chatHistory, userMessage];
     console.log('DEBUG: Adding user message:', userMessage);
     console.log('DEBUG: New chat history after user message:', newChatHistory);
     
     setChatHistory(newChatHistory);
+    const currentMessage = message;
+    const currentImage = selectedImage;
     setMessage('');
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setLoading(true);
 
     try {
-      const response = await sendMessage(message);
+      let response;
+      
+      if (currentImage) {
+        // Send message with image
+        response = await sendMessageWithImage(currentMessage || 'What is in this image?', currentImage);
+      } else {
+        // Send text-only message
+        response = await sendMessage(currentMessage);
+      }
+      
       const assistantMessage = { 
         role: 'assistant', 
         content: response.data.reply,
@@ -243,19 +305,75 @@ const ChatBot = ({ user, onToggleFullscreen, isFullscreen = false }: ChatBotProp
           )}
         </div>
         
+        {imagePreview && (
+          <div style={{ 
+            marginBottom: '10px', 
+            position: 'relative', 
+            display: 'inline-block',
+            backgroundColor: '#f8f9fa',
+            padding: '8px',
+            borderRadius: '8px'
+          }}>
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              style={{ 
+                maxWidth: '200px', 
+                maxHeight: '200px', 
+                borderRadius: '4px',
+                display: 'block'
+              }} 
+            />
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleRemoveImage}
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                padding: '4px 8px',
+                borderRadius: '50%'
+              }}
+            >
+              <XCircle size={16} />
+            </Button>
+          </div>
+        )}
+        
         <Form onSubmit={handleSendMessage}>
           <InputGroup>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              style={{ display: 'none' }}
+            />
+            <Button
+              variant="outline-secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              style={{
+                borderRadius: '20px 0 0 20px',
+                borderColor: '#dee2e6',
+                padding: '8px 12px'
+              }}
+              title="Attach image"
+            >
+              <ImageIcon size={18} />
+            </Button>
             <Form.Control
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              style={{ borderRadius: '20px 0 0 20px' }}
+              placeholder={selectedImage ? "Ask about the image..." : "Type your message..."}
+              style={{ borderRadius: '0' }}
               disabled={loading}
             />
             <Button 
               type="submit" 
-              disabled={loading || !message.trim()} 
+              disabled={loading || (!message.trim() && !selectedImage)} 
               style={{ 
                 borderRadius: '0 20px 20px 0',
                 background: 'linear-gradient(90deg, #7c3aed, #a855f7)',

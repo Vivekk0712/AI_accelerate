@@ -89,6 +89,8 @@ class ChatRequest(BaseModel):
     metadata: dict | None = None
     user_name: str | None = None
     user_email: str | None = None
+    image_base64: str | None = None  # Base64 encoded image
+    image_mime_type: str | None = None  # e.g., "image/jpeg", "image/png"
 
 class AdminLoginRequest(BaseModel):
     email: str
@@ -117,7 +119,11 @@ async def mcp_query(request: ChatRequest):
     user_message = request.message
     user_name = request.user_name
     user_email = request.user_email
-    logger.info(f"Received chat request from user {user_id} (name: {user_name}, email: {user_email})")
+    image_base64 = request.image_base64
+    image_mime_type = request.image_mime_type
+    
+    has_image = image_base64 and image_mime_type
+    logger.info(f"Received chat request from user {user_id} (name: {user_name}, email: {user_email}, has_image: {has_image})")
 
     try:
         # 1. Get or create user profile with name/email
@@ -132,10 +138,12 @@ async def mcp_query(request: ChatRequest):
         logger.info(f"Chat history: {chat_history}")
         print(f"DEBUG: MCP server returning chat history: {chat_history}")
 
-        # 3. Search for relevant file content
-        logger.info("Searching for relevant file content...")
-        file_context = file_tools.search_similar_chunks(user_message, user_id, limit=50)
-        logger.info(f"Found {len(file_context)} relevant file chunks")
+        # 3. Search for relevant file content (only if no image)
+        file_context = []
+        if not has_image:
+            logger.info("Searching for relevant file content...")
+            file_context = file_tools.search_similar_chunks(user_message, user_id, limit=50)
+            logger.info(f"Found {len(file_context)} relevant file chunks")
 
         # 3.5 Add UI awareness as context (structural + functional + contact)
         ui_context = site_tools.get_ui_context()
@@ -146,12 +154,26 @@ async def mcp_query(request: ChatRequest):
         # 4. Generate response with user context, file context, and site facts
         logger.info("Generating AI response...")
         merged_context = (file_context or []) + site_context
-        assistant_response = generate_from_prompt(user_message, chat_history, user_name, merged_context)
+        
+        # If image is provided, use vision model
+        if has_image:
+            from ai_client import generate_with_image
+            assistant_response = generate_with_image(
+                user_message, 
+                chat_history, 
+                user_name, 
+                image_base64, 
+                image_mime_type
+            )
+        else:
+            assistant_response = generate_from_prompt(user_message, chat_history, user_name, merged_context)
+        
         logger.info(f"Assistant response generated successfully")
 
-        # 5. Store messages
+        # 5. Store messages (store text only, not image data)
         logger.info("Storing user message...")
-        chat_tools.store_message(user_id, "user", user_message)
+        message_to_store = f"{user_message} [image attached]" if has_image else user_message
+        chat_tools.store_message(user_id, "user", message_to_store)
         logger.info("Storing assistant message...")
         chat_tools.store_message(user_id, "assistant", assistant_response)
         logger.info("Messages stored successfully")
