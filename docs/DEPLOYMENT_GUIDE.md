@@ -83,6 +83,8 @@ We'll upload it directly in Render dashboard.
 - **Build Command:** `pip install -r requirements-prod.txt`
 - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
+**Note:** If you get torch installation errors, the requirements file uses standard PyPI torch which works on all platforms.
+
 **Plan:**
 - Select **"Starter"** ($7/month) or **"Free"** (with limitations)
 
