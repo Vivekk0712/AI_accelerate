@@ -27,9 +27,9 @@ elasticsearch==8.12.0
 google-generativeai==0.5.4
 
 # Semantic Search - CPU-only for production (smaller Docker images)
-torch==2.2.0
-sentence-transformers==2.7.0
-transformers==4.40.2
+torch==2.5.0
+sentence-transformers==3.3.1
+transformers==4.46.0
 numpy==1.26.4
 scipy==1.13.0
 scikit-learn==1.4.2
