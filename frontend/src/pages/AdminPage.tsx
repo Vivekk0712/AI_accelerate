@@ -138,6 +138,19 @@ export default function AdminPage() {
               <p className="text-gray-600 mt-2">Access the admin dashboard</p>
             </div>
 
+            <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800 font-medium mb-1">🔑 Demo Credentials</p>
+              <p className="text-xs text-blue-700 mb-1">
+                Email: <code className="bg-blue-100 px-1 py-0.5 rounded">vegitofssb@gmail.com</code>
+              </p>
+              <p className="text-xs text-blue-700">
+                Password: <code className="bg-blue-100 px-1 py-0.5 rounded">Vegito@123</code>
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                (For demo/testing purposes only)
+              </p>
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

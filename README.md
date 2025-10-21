@@ -14,6 +14,16 @@ A modern AI-powered RAG chatbot that lets you upload documents and ask questions
 
 **[🚀 Live Demo](https://ai-assistant-mcp-ten.vercel.app)**
 
+### 🔑 Demo Credentials
+
+**Admin Access:**
+- Email: `vegitofssb@gmail.com`
+- Password: `Vegito@123`
+- Access admin panel at: `/admin`
+
+**Regular User:**
+- Sign up with any email or use Google Sign-In
+
 ---
 
 ---
