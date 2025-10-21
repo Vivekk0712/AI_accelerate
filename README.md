@@ -1,10 +1,20 @@
-# 🤖 AI Assistant - Smart Document Chat
+# 🤖 MCP-Based Contextual Chatbot with Retrieval-Augmented Generation
 
-> **Powered by Gemini 2.5 Pro + Elasticsearch + Firebase**
+> **Powered by Gemini AI + Elasticsearch + Model Context Protocol (MCP)**
 
-A modern AI-powered chat assistant that lets you upload documents and ask questions. Get instant, accurate answers using advanced semantic search and natural language processing.
+A modern AI-powered RAG chatbot that lets you upload documents and ask questions. Get instant, accurate answers using advanced semantic search, vector embeddings, and the Model Context Protocol architecture.
 
-![Tech Stack](https://img.shields.io/badge/React-18-blue) ![Node.js](https://img.shields.io/badge/Node.js-18-green) ![Python](https://img.shields.io/badge/Python-3.10-yellow) ![Firebase](https://img.shields.io/badge/Firebase-Auth-orange) ![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.12-purple)
+![Tech Stack](https://img.shields.io/badge/React-18-blue) ![Node.js](https://img.shields.io/badge/Node.js-18-green) ![Python](https://img.shields.io/badge/Python-3.11-yellow) ![Firebase](https://img.shields.io/badge/Firebase-Auth-orange) ![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.12-purple)
+
+---
+
+## 🎥 Demo
+
+**[📺 Watch Demo Video](https://www.youtube.com/watch?v=pGwVfDRDL5k)**
+
+**[🚀 Live Demo](https://ai-assistant-mcp-ten.vercel.app)**
+
+---
 
 ---
 
