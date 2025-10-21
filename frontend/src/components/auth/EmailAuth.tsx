@@ -5,20 +5,29 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../firebaseClient';
 import { sessionLogin } from '../../services/authApi';
-import { Form, Alert } from 'react-bootstrap';
-import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Loader2, UserPlus, LogIn } from 'lucide-react';
-import PasswordStrength from '../ui/PasswordStrength';
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
-const EmailAuth = () => {
+interface EmailAuthProps {
+  isSignUp: boolean;
+}
+
+const EmailAuth = ({ isSignUp }: EmailAuthProps) => {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isSignUp, setIsSignUp] = useState(true);
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Password strength indicator
+  const getPasswordStrength = () => {
+    if (password.length === 0) return { strength: 0, label: '', color: '' };
+    if (password.length < 6) return { strength: 1, label: 'Weak', color: '#ef4444' };
+    if (password.length < 10) return { strength: 2, label: 'Medium', color: '#f59e0b' };
+    return { strength: 3, label: 'Strong', color: '#10b981' };
+  };
+
+  const passwordStrength = getPasswordStrength();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +40,6 @@ const EmailAuth = () => {
         return;
       }
 
-      // Basic validation
       if (!email || !password) {
         setError('Please fill in all fields');
         return;
@@ -55,7 +63,6 @@ const EmailAuth = () => {
     } catch (error: any) {
       console.error('Auth error:', error);
       
-      // Better error messages
       if (error.code === 'auth/email-already-in-use') {
         setError('This email is already registered. Try signing in instead.');
       } else if (error.code === 'auth/weak-password') {
@@ -76,205 +83,232 @@ const EmailAuth = () => {
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: {
-            staggerChildren: 0.1
-          }
-        }
-      }}
-    >
-      <motion.div variants={itemVariants} className="text-center mb-4">
-        <div className="d-flex align-items-center justify-content-center mb-2">
-          <Mail className="me-2" size={20} style={{ color: '#6366f1' }} />
-          <h5 className="mb-0">{isSignUp ? 'Create Your Account' : 'Welcome Back'}</h5>
-        </div>
-        <p className="text-muted small mb-0">
-          {isSignUp ? '' : 'Sign in to your account'}
-        </p>
-      </motion.div>
-
-      <Form onSubmit={handleAuth}>
-        <motion.div variants={itemVariants}>
-          <Form.Group className="mb-3" controlId="formBasicEmail">
-            <Form.Label className="small fw-semibold text-muted mb-2">
-              Email Address
-            </Form.Label>
-            <div className="position-relative">
-              <Mail 
-                size={18} 
-                className="position-absolute text-muted"
-                style={{ 
-                  left: 12, 
-                  top: '50%', 
-                  transform: 'translateY(-50%)',
-                  zIndex: 2
-                }}
-              />
-              <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                disabled={isLoading}
-                onFocus={() => setIsEmailFocused(true)}
-                onBlur={() => setIsEmailFocused(false)}
-                style={{
-                  borderRadius: 12,
-                  border: `2px solid ${isEmailFocused ? '#6366f1' : 'rgba(0,0,0,0.1)'}`,
-                  boxShadow: isEmailFocused ? '0 0 0 4px rgba(99,102,241,0.15)' : 'none',
-                  transition: 'all 200ms ease',
-                  padding: '12px 16px 12px 40px',
-                  fontSize: '16px',
-                  backgroundColor: isLoading ? '#f8f9fa' : '#fff'
-                }}
-              />
-            </div>
-          </Form.Group>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Form.Group className="mb-3" controlId="formBasicPassword">
-            <Form.Label className="small fw-semibold text-muted mb-2">
-              Password
-            </Form.Label>
-            <div className="position-relative">
-              <Lock 
-                size={18} 
-                className="position-absolute text-muted"
-                style={{ 
-                  left: 12, 
-                  top: '50%', 
-                  transform: 'translateY(-50%)',
-                  zIndex: 2
-                }}
-              />
-              <Form.Control
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={isSignUp ? 'Create a strong password' : 'Enter your password'}
-                required
-                disabled={isLoading}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-                style={{
-                  borderRadius: 12,
-                  border: `2px solid ${isPasswordFocused ? '#6366f1' : 'rgba(0,0,0,0.1)'}`,
-                  boxShadow: isPasswordFocused ? '0 0 0 4px rgba(99,102,241,0.15)' : 'none',
-                  transition: 'all 200ms ease',
-                  padding: '12px 50px 12px 40px',
-                  fontSize: '16px',
-                  backgroundColor: isLoading ? '#f8f9fa' : '#fff'
-                }}
-              />
-              <button
-                type="button"
-                className="btn p-0 position-absolute"
-                style={{ 
-                  right: 12, 
-                  top: '50%', 
-                  transform: 'translateY(-50%)',
-                  border: 'none',
-                  background: 'none',
-                  color: '#6b7280'
-                }}
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <PasswordStrength password={password} show={isSignUp && isPasswordFocused} />
-          </Form.Group>
-        </motion.div>
-
-        {error && (
-          <motion.div variants={itemVariants}>
-            <Alert 
-              variant="danger" 
-              className="d-flex align-items-center"
-              style={{ 
-                borderRadius: 12,
-                border: 'none',
-                backgroundColor: '#fef2f2',
-                color: '#dc2626',
-                fontSize: '14px'
-              }}
-            >
-              <div>{error}</div>
-            </Alert>
-          </motion.div>
-        )}
-
-        <motion.div variants={itemVariants} className="d-grid">
-          <motion.button
-            whileHover={{ scale: isLoading ? 1 : 1.02 }}
-            whileTap={{ scale: isLoading ? 1 : 0.98 }}
-            className="btn"
-            type="submit"
-            disabled={isLoading || !email || !password}
+    <form onSubmit={handleAuth}>
+      {/* Name Field (Sign Up Only) */}
+      {isSignUp && (
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: '#4a5568',
+            marginBottom: '8px'
+          }}>
+            Full Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nicholas Eregmia"
+            disabled={isLoading}
             style={{
-              background: isLoading || !email || !password
-                ? 'linear-gradient(90deg, #9ca3af, #9ca3af)' 
-                : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: 12,
+              width: '100%',
               padding: '12px 16px',
-              boxShadow: isLoading || !email || !password
-                ? 'none' 
-                : '0 10px 24px rgba(99,102,241,0.35)',
-              transition: 'all 200ms ease',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: isLoading || !email || !password ? 'not-allowed' : 'pointer'
+              fontSize: '15px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '12px',
+              outline: 'none',
+              transition: 'all 0.2s',
+              backgroundColor: isLoading ? '#f7fafc' : '#ffffff'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#667eea'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          />
+        </div>
+      )}
+
+      {/* Email Field */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{
+          display: 'block',
+          fontSize: '13px',
+          fontWeight: '600',
+          color: '#4a5568',
+          marginBottom: '8px'
+        }}>
+          Email Address
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="nicholas@eregmia.com"
+          required
+          disabled={isLoading}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            fontSize: '15px',
+            border: '2px solid #e2e8f0',
+            borderRadius: '12px',
+            outline: 'none',
+            transition: 'all 0.2s',
+            backgroundColor: isLoading ? '#f7fafc' : '#ffffff'
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#667eea'}
+          onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+        />
+      </div>
+
+      {/* Password Field */}
+      <div style={{ marginBottom: isSignUp && password ? '8px' : '20px' }}>
+        <label style={{
+          display: 'block',
+          fontSize: '13px',
+          fontWeight: '600',
+          color: '#4a5568',
+          marginBottom: '8px'
+        }}>
+          Password
+        </label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••••••"
+            required
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              paddingRight: '48px',
+              fontSize: '15px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '12px',
+              outline: 'none',
+              transition: 'all 0.2s',
+              backgroundColor: isLoading ? '#f7fafc' : '#ffffff'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#667eea'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#a0aec0',
+              padding: '4px'
             }}
           >
-            {isLoading ? (
-              <div className="d-flex align-items-center justify-content-center">
-                <Loader2 size={18} className="me-2" style={{ animation: 'spin 1s linear infinite' }} />
-                {isSignUp ? 'Creating Account...' : 'Signing In...'}
-              </div>
-            ) : (
-              <div className="d-flex align-items-center justify-content-center">
-                {isSignUp ? <UserPlus size={18} className="me-2" /> : <LogIn size={18} className="me-2" />}
-                {isSignUp ? 'Create Account' : 'Sign In'}
-              </div>
-            )}
-          </motion.button>
-        </motion.div>
-      </Form>
-      
-      <motion.div variants={itemVariants} className="text-center mt-4">
-        <button
-          type="button"
-          className="btn btn-link p-0 text-decoration-none"
-          onClick={() => {
-            setIsSignUp(!isSignUp);
-            setError(null);
-            setPassword('');
-          }}
-          disabled={isLoading}
-          style={{ 
-            color: '#6366f1',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}
-        >
-          {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-        </button>
-      </motion.div>
-    </motion.div>
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Password Strength Indicator */}
+      {isSignUp && password && (
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '6px'
+          }}>
+            <div style={{
+              flex: 1,
+              height: '4px',
+              background: '#e2e8f0',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${(passwordStrength.strength / 3) * 100}%`,
+                height: '100%',
+                background: passwordStrength.color,
+                transition: 'all 0.3s'
+              }} />
+            </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: passwordStrength.color
+            }}>
+              {passwordStrength.label}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Forgot Password (Sign In Only) */}
+      {!isSignUp && (
+        <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+          <button
+            type="button"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#667eea',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              padding: '0'
+            }}
+          >
+            Forgot your password?
+          </button>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '12px 16px',
+          background: '#fee2e2',
+          border: '1px solid #fecaca',
+          borderRadius: '12px',
+          marginBottom: '20px'
+        }}>
+          <XCircle size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', color: '#dc2626' }}>{error}</span>
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={isLoading || !email || !password}
+        style={{
+          width: '100%',
+          padding: '14px 24px',
+          fontSize: '15px',
+          fontWeight: '600',
+          color: '#ffffff',
+          background: isLoading || !email || !password
+            ? '#cbd5e0'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: 'none',
+          borderRadius: '12px',
+          cursor: isLoading || !email || !password ? 'not-allowed' : 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
+        }}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+            {isSignUp ? 'Creating Account...' : 'Signing In...'}
+          </>
+        ) : (
+          isSignUp ? 'Sign Up' : 'Sign In'
+        )}
+      </button>
+    </form>
   );
 };
 

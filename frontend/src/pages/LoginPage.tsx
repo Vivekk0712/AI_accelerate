@@ -1,306 +1,262 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import EmailAuth from '../components/auth/EmailAuth';
 import GoogleSignIn from '../components/auth/GoogleSignIn';
 import PhoneAuth from '../components/auth/PhoneAuth';
-// Logo will be replaced with an icon
-import { Bot } from 'lucide-react';
 import { auth } from '../firebaseClient';
-import { Shield, Zap, Users, Star } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 const LoginPage = () => {
-  const [activeTab, setActiveTab] = useState('email');
-  const [currentFeature, setCurrentFeature] = useState(0);
-
-  const features = [
-    { icon: Shield, text: "Secure & Private", color: "#10b981" },
-    { icon: Zap, text: "Lightning Fast", color: "#f59e0b" },
-    { icon: Users, text: "Team Collaboration", color: "#6366f1" },
-    { icon: Star, text: "Premium Features", color: "#8b5cf6" }
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentFeature((prev) => (prev + 1) % features.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.3,
-        staggerChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1
-    }
-  };
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{
-      background: 'radial-gradient(1000px 600px at 20% 10%, rgba(99,102,241,0.35), transparent), radial-gradient(900px 500px at 80% 20%, rgba(147,51,234,0.35), transparent), linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-      padding: '28px'
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
     }}>
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ 
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            rotate: [0, 180, 360]
-          }}
-          transition={{ 
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full"
-          style={{
-            background: 'linear-gradient(45deg, rgba(99,102,241,0.1), rgba(147,51,234,0.1))',
-            filter: 'blur(40px)'
-          }}
-        />
-        <motion.div
-          animate={{ 
-            x: [0, -80, 0],
-            y: [0, 60, 0],
-            rotate: [360, 180, 0]
-          }}
-          transition={{ 
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute bottom-1/4 right-1/4 w-24 h-24 rounded-full"
-          style={{
-            background: 'linear-gradient(45deg, rgba(6,182,212,0.1), rgba(168,85,247,0.1))',
-            filter: 'blur(30px)'
-          }}
-        />
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        {/* Card Container */}
+        <div style={{
+          background: '#ffffff',
+          borderRadius: '32px',
+          overflow: 'hidden',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        }}>
+          {/* Header Section */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '40px 32px',
+            position: 'relative'
+          }}>
+            {/* Back Button */}
+            <button
+              onClick={() => window.location.hash = '#home'}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '8px 12px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              <ArrowLeft size={18} />
+            </button>
 
-      <div className="flex items-center justify-center w-full max-w-6xl mx-auto">
-        {/* Left Side - Features */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="hidden lg:flex flex-col justify-center w-1/2 pr-12"
-        >
-          <motion.div variants={itemVariants} className="mb-8">
-            <h1 className="text-5xl font-bold text-white mb-4">
-              Welcome to the
-              <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Future
-              </span>
-            </h1>
-            <p className="text-xl text-white/80 leading-relaxed">
-              Your Smart AI Assistant powered by Gemini and Elasticsearch. 
-              Upload documents and get instant AI-powered answers.
-            </p>
-          </motion.div>
+            {/* Sign Up Link */}
+            {!isSignUp && (
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
+                  Don't have an account?
+                </span>
+                <button
+                  onClick={() => setIsSignUp(true)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 16px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
 
-          {/* Animated Features */}
-          <motion.div variants={itemVariants} className="space-y-4">
+            {isSignUp && (
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
+                  Already have an account?
+                </span>
+                <button
+                  onClick={() => setIsSignUp(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 16px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  Sign In
+                </button>
+              </div>
+            )}
+
+            {/* Logo/Title */}
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <h1 style={{
+                color: '#ffffff',
+                fontSize: '36px',
+                fontWeight: '700',
+                margin: '0',
+                letterSpacing: '-0.5px'
+              }}>
+                AI Assistant
+              </h1>
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <div style={{ padding: '40px 32px' }}>
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentFeature}
-                initial={{ opacity: 0, x: -20 }}
+                key={isSignUp ? 'signup' : 'signin'}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center space-x-4 p-4 rounded-2xl"
-                style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.2)'
-                }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <div 
-                  className="p-3 rounded-xl"
-                  style={{ backgroundColor: features[currentFeature].color + '20' }}
-                >
-                  {React.createElement(features[currentFeature].icon, {
-                    size: 24,
-                    style: { color: features[currentFeature].color }
-                  })}
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-lg">
-                    {features[currentFeature].text}
-                  </h3>
-                  <p className="text-white/70 text-sm">
-                    {currentFeature === 0 && "Your data is protected with enterprise-grade security"}
-                    {currentFeature === 1 && "Optimized performance for seamless experience"}
-                    {currentFeature === 2 && "Work together with your team in real-time"}
-                    {currentFeature === 3 && "Access advanced features and priority support"}
+                {/* Title */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: '700',
+                    color: '#1a202c',
+                    margin: '0 0 8px 0'
+                  }}>
+                    {isSignUp ? 'Get started free.' : 'Welcome Back'}
+                  </h2>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#718096',
+                    margin: '0'
+                  }}>
+                    {isSignUp ? 'Free forever. No credit card needed.' : 'Enter your details below'}
                   </p>
+                </div>
+
+                {/* Login Method Toggle */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  marginBottom: '24px',
+                  padding: '4px',
+                  background: '#f7fafc',
+                  borderRadius: '12px'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('email')}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: loginMethod === 'email' ? '#ffffff' : '#718096',
+                      background: loginMethod === 'email' 
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                        : 'transparent',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('phone')}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: loginMethod === 'phone' ? '#ffffff' : '#718096',
+                      background: loginMethod === 'phone'
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                        : 'transparent',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Phone
+                  </button>
+                </div>
+
+                {/* Auth Form */}
+                {loginMethod === 'email' ? (
+                  <EmailAuth isSignUp={isSignUp} />
+                ) : (
+                  <PhoneAuth />
+                )}
+
+                {/* Divider */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  margin: '24px 0',
+                  gap: '16px'
+                }}>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                  <span style={{ fontSize: '13px', color: '#a0aec0', fontWeight: '500' }}>
+                    Or continue with
+                  </span>
+                  <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                </div>
+
+                {/* Social Buttons */}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <GoogleSignIn />
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            {/* Feature Indicators */}
-            <div className="flex space-x-2 justify-center mt-6">
-              {features.map((_, index) => (
-                <motion.div
-                  key={index}
-                  className="w-2 h-2 rounded-full cursor-pointer"
-                  style={{
-                    backgroundColor: index === currentFeature ? '#ffffff' : 'rgba(255,255,255,0.3)'
-                  }}
-                  onClick={() => setCurrentFeature(index)}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Right Side - Auth Form */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="w-full lg:w-1/2 max-w-md"
-        >
-          <motion.div variants={itemVariants}>
-            <Card className="shadow-2xl border border-primary/20" style={{ 
-              borderRadius: 24, 
-              overflow: 'hidden',
-              background: 'rgba(255,255,255,0.95)',
-              backdropFilter: 'blur(20px)'
-            }}>
+            {/* Firebase Warning */}
+            {!auth && (
               <div style={{
-                height: 6,
-                background: 'linear-gradient(90deg, #6366f1, #a855f7, #06b6d4)'
-              }} />
-              <CardHeader className="text-center space-y-1 pb-4">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ 
-                    type: 'spring', 
-                    stiffness: 200, 
-                    damping: 15,
-                    delay: 0.2
-                  }}
-                >
-                  <div className="relative inline-block">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        background: 'linear-gradient(45deg, #6366f1, #a855f7, #06b6d4)',
-                        filter: 'blur(8px)',
-                        opacity: 0.6
-                      }}
-                    />
-                    <div className="relative bg-gradient-to-br from-primary to-purple-600 rounded-2xl p-4 shadow-xl">
-                      <Bot className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                </motion.div>
-                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent">
-                  Welcome to AI Assistant
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
-                  Sign in to access our platform
-                </CardDescription>
-                {!auth && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-2 p-2 rounded-lg text-xs"
-                    style={{ 
-                      backgroundColor: '#fef3c7',
-                      color: '#d97706',
-                      border: '1px solid #fbbf24'
-                    }}
-                  >
-                    ⚠️ Authentication not configured. Set Firebase env vars to enable sign-in.
-                  </motion.div>
-                )}
-              </CardHeader>
-              <CardContent className="pt-3 px-6 pb-6">
-                <Tabs value={activeTab} onValueChange={(k: string) => setActiveTab(k || 'email')} className="w-full">
-                  <TabsList className="grid grid-cols-2 rounded-xl p-1 mb-6" style={{ 
-                    background: 'rgba(99,102,241,0.10)',
-                    border: '1px solid rgba(99,102,241,0.2)'
-                  }}>
-                    <TabsTrigger 
-                      value="email" 
-                      className="rounded-lg transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-fuchsia-500 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-                    >
-                      Email
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="phone" 
-                      className="rounded-lg transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-fuchsia-500 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-                    >
-                      Phone
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <AnimatePresence mode="wait">
-                    <TabsContent value="email" className="pt-0">
-                      <motion.div
-                        key="email"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <EmailAuth />
-                      </motion.div>
-                    </TabsContent>
-                    <TabsContent value="phone" className="pt-0">
-                      <motion.div
-                        key="phone"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <PhoneAuth />
-                      </motion.div>
-                    </TabsContent>
-                  </AnimatePresence>
-                </Tabs>
-                
-                <div className="text-center mt-6">
-                  <div className="relative my-6">
-                    <hr style={{ border: '1px solid rgba(0,0,0,0.1)' }} />
-                    <span 
-                      className="absolute left-1/2 -translate-x-1/2 px-4 text-xs text-muted-foreground"
-                      style={{ 
-                        top: '-10px',
-                        backgroundColor: 'rgba(255,255,255,0.95)'
-                      }}
-                    >
-                      OR
-                    </span>
-                  </div>
-                  <GoogleSignIn />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
-      </div>
+                marginTop: '20px',
+                padding: '12px 16px',
+                background: '#fef3c7',
+                border: '1px solid #fbbf24',
+                borderRadius: '12px',
+                fontSize: '13px',
+                color: '#d97706'
+              }}>
+                ⚠️ Authentication not configured. Set Firebase env vars to enable sign-in.
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
