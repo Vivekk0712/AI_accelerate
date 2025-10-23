@@ -27,12 +27,14 @@ const GoogleSignIn = () => {
             await sessionLogin(idToken);
             localStorage.setItem('firebaseToken', idToken);
             console.log('Login successful, redirecting...');
-            window.location.replace('/#home');
           } catch (error) {
             console.error('Session login failed, using token fallback:', error);
             localStorage.setItem('firebaseToken', idToken);
-            window.location.replace('/#home');
           }
+          
+          // Force full page reload to home
+          window.location.href = window.location.origin + '/#home';
+          window.location.reload();
         }
       } catch (error: any) {
         console.error('Redirect result error:', error);
@@ -71,12 +73,14 @@ const GoogleSignIn = () => {
           await sessionLogin(idToken);
           localStorage.setItem('firebaseToken', idToken);
           console.log('Login successful, redirecting...');
-          window.location.replace('/#home');
         } catch (error) {
           console.error('Session login failed, using token fallback:', error);
           localStorage.setItem('firebaseToken', idToken);
-          window.location.replace('/#home');
         }
+        
+        // Force full page reload to home
+        window.location.href = window.location.origin + '/#home';
+        window.location.reload();
       } catch (popupError: any) {
         // If popup fails on mobile, try redirect as fallback
         if (isMobile && (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user')) {

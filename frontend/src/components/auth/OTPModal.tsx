@@ -53,7 +53,8 @@ const OTPModal = ({ show, onHide, confirmationResult, phoneNumber }: OTPModalPro
 
       // Success - close modal and redirect
       onHide();
-      window.location.replace('/#home');
+      window.location.href = window.location.origin + '/#home';
+      window.location.reload();
     } catch (error: any) {
       console.error('OTP verification error:', error);
 

@@ -60,15 +60,15 @@ const EmailAuth = ({ isSignUp }: EmailAuthProps) => {
       
       try {
         await sessionLogin(idToken);
-        // Store token as fallback for mobile
         localStorage.setItem('firebaseToken', idToken);
-        window.location.replace('/#home');
       } catch (error) {
         console.error('Session login failed, using token fallback:', error);
-        // Fallback: store token and redirect anyway
         localStorage.setItem('firebaseToken', idToken);
-        window.location.replace('/#home');
       }
+      
+      // Force full page reload to home
+      window.location.href = window.location.origin + '/#home';
+      window.location.reload();
     } catch (error: any) {
       console.error('Auth error:', error);
       
