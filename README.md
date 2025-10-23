@@ -537,4 +537,45 @@ For issues or questions:
 
 ---
 
+## ⚙️ Advanced Configuration
+
+### Enable Re-Ranking for Better Search Accuracy
+
+By default, re-ranking is **disabled** to save memory on free hosting tiers. If you have sufficient memory (1GB+ RAM), you can enable it for more accurate search results.
+
+**What is Re-Ranking?**
+- Uses a cross-encoder model to re-score search results
+- Improves relevance of retrieved documents
+- Requires additional ~300MB memory
+- Recommended for production deployments with paid hosting
+
+**How to Enable:**
+
+Edit `mcp_server/tools/file_tools.py`:
+
+```python
+# Line 368
+def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_reranking: bool = False):
+```
+
+Change `use_reranking: bool = False` to `use_reranking: bool = True`:
+
+```python
+# Line 368
+def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_reranking: bool = True):
+```
+
+**Memory Requirements:**
+- **Without re-ranking:** ~250MB (works on free tier)
+- **With re-ranking:** ~550MB (requires paid tier or 1GB+ RAM)
+
+**When to Enable:**
+- ✅ Production deployment with Render Starter ($7/month) or higher
+- ✅ Self-hosted with 1GB+ RAM
+- ✅ When search accuracy is critical
+- ❌ Free tier hosting (will cause crashes)
+- ❌ Development/demo environments
+
+---
+
 **Built with ❤️ for the AI community**
