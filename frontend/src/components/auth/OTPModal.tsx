@@ -42,12 +42,18 @@ const OTPModal = ({ show, onHide, confirmationResult, phoneNumber }: OTPModalPro
     try {
       const userCredential = await confirmationResult.confirm(otp);
       const idToken = await userCredential.user.getIdToken();
-      await sessionLogin(idToken);
+      
+      try {
+        await sessionLogin(idToken);
+        localStorage.setItem('firebaseToken', idToken);
+      } catch (error) {
+        console.error('Session login failed, using token fallback:', error);
+        localStorage.setItem('firebaseToken', idToken);
+      }
 
       // Success - close modal and redirect
       onHide();
-      window.location.hash = '#home';
-      window.location.reload();
+      window.location.replace('/#home');
     } catch (error: any) {
       console.error('OTP verification error:', error);
 

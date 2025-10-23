@@ -5,6 +5,15 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Add interceptor to include Firebase token from localStorage as fallback
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('firebaseToken');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const sessionLogin = (idToken: string) => {
   return api.post('/api/sessionLogin', { idToken });
 };

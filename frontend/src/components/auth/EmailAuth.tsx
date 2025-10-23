@@ -57,9 +57,18 @@ const EmailAuth = ({ isSignUp }: EmailAuthProps) => {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
       const idToken = await userCredential.user.getIdToken();
-      await sessionLogin(idToken);
-      window.location.hash = '#home';
-      window.location.reload();
+      
+      try {
+        await sessionLogin(idToken);
+        // Store token as fallback for mobile
+        localStorage.setItem('firebaseToken', idToken);
+        window.location.replace('/#home');
+      } catch (error) {
+        console.error('Session login failed, using token fallback:', error);
+        // Fallback: store token and redirect anyway
+        localStorage.setItem('firebaseToken', idToken);
+        window.location.replace('/#home');
+      }
     } catch (error: any) {
       console.error('Auth error:', error);
       

@@ -23,13 +23,15 @@ const GoogleSignIn = () => {
           console.log('Got redirect result, logging in...');
           const idToken = await result.user.getIdToken();
           
-          const response = await sessionLogin(idToken);
-          
-          if (response.status === 200) {
+          try {
+            await sessionLogin(idToken);
+            localStorage.setItem('firebaseToken', idToken);
             console.log('Login successful, redirecting...');
-            window.location.href = '/#home';
-          } else {
-            throw new Error('Session login failed');
+            window.location.replace('/#home');
+          } catch (error) {
+            console.error('Session login failed, using token fallback:', error);
+            localStorage.setItem('firebaseToken', idToken);
+            window.location.replace('/#home');
           }
         }
       } catch (error: any) {
@@ -65,15 +67,15 @@ const GoogleSignIn = () => {
         const idToken = await userCredential.user.getIdToken();
         console.log('Got ID token from popup, calling session login...');
         
-        const response = await sessionLogin(idToken);
-        console.log('Session login response:', response.status);
-        
-        if (response.status === 200) {
+        try {
+          await sessionLogin(idToken);
+          localStorage.setItem('firebaseToken', idToken);
           console.log('Login successful, redirecting...');
-          // Use replace to force reload and ensure session is recognized
           window.location.replace('/#home');
-        } else {
-          throw new Error('Session login failed');
+        } catch (error) {
+          console.error('Session login failed, using token fallback:', error);
+          localStorage.setItem('firebaseToken', idToken);
+          window.location.replace('/#home');
         }
       } catch (popupError: any) {
         // If popup fails on mobile, try redirect as fallback
