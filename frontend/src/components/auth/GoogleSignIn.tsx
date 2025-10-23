@@ -17,38 +17,17 @@ const GoogleSignIn = () => {
       if (!auth) return;
       
       try {
-        setIsLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
+          setIsLoading(true);
           console.log('Got redirect result, logging in...');
           const idToken = await result.user.getIdToken();
-          console.log('Got ID token, calling session login...');
           
           const response = await sessionLogin(idToken);
-          console.log('Session login response:', response.status);
           
           if (response.status === 200) {
-            console.log('Login successful, verifying session...');
-            
-            // Verify session was actually set by checking /api/me
-            try {
-              const meResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/me`, {
-                credentials: 'include'
-              });
-              
-              if (meResponse.ok) {
-                console.log('Session verified, redirecting...');
-                window.location.href = '/#home';
-              } else {
-                console.error('Session not set properly');
-                setError('Login failed: Session could not be established. Please try email/password login instead.');
-                setIsLoading(false);
-              }
-            } catch (verifyError) {
-              console.error('Session verification failed:', verifyError);
-              setError('Login failed: Unable to verify session. Please try email/password login instead.');
-              setIsLoading(false);
-            }
+            console.log('Login successful, redirecting...');
+            window.location.href = '/#home';
           } else {
             throw new Error('Session login failed');
           }
@@ -58,7 +37,6 @@ const GoogleSignIn = () => {
         if (error.code !== 'auth/missing-initial-state') {
           setError(`Failed to sign in: ${error.message || 'Please try again'}`);
         }
-      } finally {
         setIsLoading(false);
       }
     };
@@ -91,25 +69,8 @@ const GoogleSignIn = () => {
         console.log('Session login response:', response.status);
         
         if (response.status === 200) {
-          console.log('Login successful, verifying session...');
-          
-          // Verify session was actually set by checking /api/me
-          try {
-            const meResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/me`, {
-              credentials: 'include'
-            });
-            
-            if (meResponse.ok) {
-              console.log('Session verified, redirecting...');
-              window.location.href = '/#home';
-            } else {
-              console.error('Session not set properly');
-              throw new Error('Session could not be established');
-            }
-          } catch (verifyError) {
-            console.error('Session verification failed:', verifyError);
-            throw new Error('Unable to verify session');
-          }
+          console.log('Login successful, redirecting...');
+          window.location.href = '/#home';
         } else {
           throw new Error('Session login failed');
         }
