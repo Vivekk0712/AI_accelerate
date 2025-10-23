@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth } from '../../firebaseClient';
 import { sessionLogin } from '../../services/authApi';
 import { Loader2, XCircle } from 'lucide-react';
@@ -7,6 +7,34 @@ import { Loader2, XCircle } from 'lucide-react';
 const GoogleSignIn = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Check if on mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  // Handle redirect result on component mount (for mobile)
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      if (!auth) return;
+      
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setIsLoading(true);
+          const idToken = await result.user.getIdToken();
+          await sessionLogin(idToken);
+          window.location.hash = '#home';
+          window.location.reload();
+        }
+      } catch (error: any) {
+        console.error('Redirect result error:', error);
+        setError('Failed to sign in with Google. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleRedirectResult();
+  }, []);
 
   const handleSignIn = async () => {
     setError(null);
@@ -23,11 +51,17 @@ const GoogleSignIn = () => {
         prompt: 'select_account'
       });
       
-      const userCredential = await signInWithPopup(auth, provider);
-      const idToken = await userCredential.user.getIdToken();
-      await sessionLogin(idToken);
-      window.location.hash = '#home';
-      window.location.reload();
+      // Use redirect for mobile, popup for desktop
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+        // Redirect will happen, no need to continue
+      } else {
+        const userCredential = await signInWithPopup(auth, provider);
+        const idToken = await userCredential.user.getIdToken();
+        await sessionLogin(idToken);
+        window.location.hash = '#home';
+        window.location.reload();
+      }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       
@@ -40,7 +74,6 @@ const GoogleSignIn = () => {
       } else {
         setError('Failed to sign in with Google. Please try again.');
       }
-    } finally {
       setIsLoading(false);
     }
   };
