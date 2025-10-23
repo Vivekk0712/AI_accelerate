@@ -365,9 +365,11 @@ def get_file_by_id(file_id: str) -> Optional[Dict[str, Any]]:
         print(f"Error fetching file: {e}")
         return None
 
-def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_reranking: bool = True) -> List[Dict[str, Any]]:
+def search_similar_chunks(query: str, user_id: str, limit: int = 5, use_reranking: bool = False) -> List[Dict[str, Any]]:
     """
     Search for similar file chunks using Elasticsearch vector similarity with optional re-ranking
+    
+    Note: Re-ranking is disabled by default to save memory on free hosting tiers.
     
     Args:
         query: Search query
