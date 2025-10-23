@@ -1,4 +1,10 @@
-import api from './authApi';
+import axios from 'axios';
+
+// Create separate axios instance for admin API (don't use Firebase token interceptor)
+const adminApi = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
+  withCredentials: true,
+});
 
 export interface AdminLoginRequest {
   email: string;
@@ -26,7 +32,7 @@ export interface AdminUser {
 // Admin Authentication
 export const adminLogin = async (credentials: AdminLoginRequest): Promise<AdminLoginResponse> => {
   try {
-    const response = await api.post('/api/admin/login', credentials);
+    const response = await adminApi.post('/api/admin/login', credentials);
     return response.data;
   } catch (error: unknown) {
     console.error('Admin login error:', error);
@@ -46,7 +52,7 @@ export const adminCreate = async (adminData: {
   name: string;
 }): Promise<AdminLoginResponse> => {
   try {
-    const response = await api.post('/api/admin/create', adminData);
+    const response = await adminApi.post('/api/admin/create', adminData);
     return response.data;
   } catch (error: unknown) {
     console.error('Admin creation error:', error);
@@ -63,7 +69,7 @@ export const adminCreate = async (adminData: {
 // Admin File Management
 export const getAdminFiles = async (token: string) => {
   try {
-    const response = await api.get('/api/admin/files', {
+    const response = await adminApi.get('/api/admin/files', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -77,7 +83,7 @@ export const getAdminFiles = async (token: string) => {
 
 export const getAdminFileDetails = async (fileId: string, token: string) => {
   try {
-    const response = await api.get(`/api/admin/files/${fileId}`, {
+    const response = await adminApi.get(`/api/admin/files/${fileId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -91,7 +97,7 @@ export const getAdminFileDetails = async (fileId: string, token: string) => {
 
 export const deleteAdminFile = async (fileId: string, token: string) => {
   try {
-    const response = await api.delete(`/api/admin/files/${fileId}`, {
+    const response = await adminApi.delete(`/api/admin/files/${fileId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -105,7 +111,7 @@ export const deleteAdminFile = async (fileId: string, token: string) => {
 
 export const getAdminStats = async (token: string) => {
   try {
-    const response = await api.get('/api/admin/stats', {
+    const response = await adminApi.get('/api/admin/stats', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

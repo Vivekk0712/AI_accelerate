@@ -1,5 +1,5 @@
 import bcrypt
-from jose import jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import os
@@ -136,7 +136,18 @@ def verify_admin_token(token: str) -> Optional[Dict[str, Any]]:
         if supabase is None:
             return None
         
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        # Debug: Print token info
+        print(f"Verifying token with algorithm: {JWT_ALGORITHM}")
+        print(f"Token (first 20 chars): {token[:20]}...")
+        
+        # Decode with explicit options to allow HS256
+        payload = jwt.decode(
+            token, 
+            JWT_SECRET_KEY, 
+            algorithms=[JWT_ALGORITHM],
+            options={"verify_signature": True, "verify_exp": True}
+        )
+        print(f"Token decoded successfully. Admin ID: {payload.get('admin_id')}")
         admin_id = payload.get('admin_id')
         
         if not admin_id:
@@ -150,9 +161,10 @@ def verify_admin_token(token: str) -> Optional[Dict[str, Any]]:
         else:
             return None
             
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         return None
-    except jwt.InvalidTokenError:
+    except JWTError as e:
+        print(f"JWT Error: {e}")
         return None
     except Exception as e:
         print(f"Error verifying admin token: {e}")
