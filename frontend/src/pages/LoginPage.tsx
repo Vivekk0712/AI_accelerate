@@ -237,6 +237,21 @@ const LoginPage = () => {
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <GoogleSignIn />
                 </div>
+
+                {/* Mobile Warning */}
+                {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '10px 12px',
+                    background: '#fef3c7',
+                    border: '1px solid #fbbf24',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    color: '#92400e'
+                  }}>
+                    📱 <strong>Mobile users:</strong> If Google Sign-In doesn't work, please use Email/Password login above.
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
 

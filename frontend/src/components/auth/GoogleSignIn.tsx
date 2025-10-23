@@ -70,7 +70,8 @@ const GoogleSignIn = () => {
         
         if (response.status === 200) {
           console.log('Login successful, redirecting...');
-          window.location.href = '/#home';
+          // Use replace to force reload and ensure session is recognized
+          window.location.replace('/#home');
         } else {
           throw new Error('Session login failed');
         }
