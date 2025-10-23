@@ -414,3 +414,4 @@ Error forwarding chat to MCP server: AxiosError: Request failed with status code
   },
   status: 502
 }
+.
