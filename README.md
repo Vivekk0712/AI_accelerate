@@ -214,7 +214,39 @@ ELASTICSEARCH_API_KEY=your-api-key
 ELASTICSEARCH_HOSTS=http://localhost:9200
 ```
 
-### 8. Run the Application
+### 8. Configure Embedding Model (Optional)
+
+The MCP server uses Sentence Transformers for semantic search. You can choose between two models based on your needs:
+
+**Option 1: Lighter Model (Default - Recommended for Free Tier)**
+- Model: `paraphrase-MiniLM-L3-v2`
+- Memory: ~250MB
+- Speed: Fast
+- Accuracy: Good
+- Best for: Free hosting (Render free tier), demos, development
+
+**Option 2: Better Accuracy (Recommended for Production)**
+- Model: `all-MiniLM-L6-v2`
+- Memory: ~400MB
+- Speed: Medium
+- Accuracy: High
+- Best for: Production with paid hosting (Render Starter $7/month)
+
+**To switch models:**
+
+Edit `mcp_server/embeddings.py`:
+```python
+# Line 18-19
+EMBEDDING_MODEL_NAME = 'paraphrase-MiniLM-L3-v2'  # Lighter model
+# OR
+EMBEDDING_MODEL_NAME = 'all-MiniLM-L6-v2'  # Better accuracy
+```
+
+**Note:** If your MCP server crashes or restarts frequently, use the lighter model or upgrade your hosting plan.
+
+---
+
+### 9. Run the Application
 
 **Terminal 1 - MCP Server:**
 ```bash
@@ -235,7 +267,7 @@ cd frontend
 npm run dev
 ```
 
-### 9. Access the Application
+### 10. Access the Application
 
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:4000
