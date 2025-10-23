@@ -15,7 +15,7 @@ _embedding_model: Optional[SentenceTransformer] = None
 _reranker_model: Optional[CrossEncoder] = None
 
 # Model configuration
-EMBEDDING_MODEL_NAME = 'all-MiniLM-L6-v2'  # 384 dimensions, fast and accurate
+EMBEDDING_MODEL_NAME = 'paraphrase-MiniLM-L3-v2'  # 384 dimensions, lighter and faster
 RERANKER_MODEL_NAME = 'cross-encoder/ms-marco-MiniLM-L-6-v2'
 EMBEDDING_DIM = 384
 
