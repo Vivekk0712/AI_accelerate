@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
+import { getAuth, type Auth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -20,6 +20,13 @@ try {
   ) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    
+    // Use localStorage instead of sessionStorage for better mobile compatibility
+    if (auth) {
+      setPersistence(auth, browserLocalPersistence).catch((error) => {
+        console.warn('Failed to set persistence:', error);
+      });
+    }
   } else {
     console.warn('Firebase not configured. Skipping initialization.');
   }

@@ -17,9 +17,9 @@ const GoogleSignIn = () => {
       if (!auth) return;
       
       try {
+        setIsLoading(true);
         const result = await getRedirectResult(auth);
         if (result) {
-          setIsLoading(true);
           const idToken = await result.user.getIdToken();
           await sessionLogin(idToken);
           window.location.hash = '#home';
@@ -27,7 +27,9 @@ const GoogleSignIn = () => {
         }
       } catch (error: any) {
         console.error('Redirect result error:', error);
-        setError('Failed to sign in with Google. Please try again.');
+        if (error.code !== 'auth/missing-initial-state') {
+          setError('Failed to sign in with Google. Please try again.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -51,16 +53,22 @@ const GoogleSignIn = () => {
         prompt: 'select_account'
       });
       
-      // Use redirect for mobile, popup for desktop
-      if (isMobile) {
-        await signInWithRedirect(auth, provider);
-        // Redirect will happen, no need to continue
-      } else {
+      // Try popup first (works on most devices)
+      try {
         const userCredential = await signInWithPopup(auth, provider);
         const idToken = await userCredential.user.getIdToken();
         await sessionLogin(idToken);
         window.location.hash = '#home';
         window.location.reload();
+      } catch (popupError: any) {
+        // If popup fails on mobile, try redirect as fallback
+        if (isMobile && (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user')) {
+          console.log('Popup failed, trying redirect...');
+          await signInWithRedirect(auth, provider);
+          // Redirect will happen, no need to continue
+        } else {
+          throw popupError;
+        }
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
